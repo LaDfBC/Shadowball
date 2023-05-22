@@ -1,14 +1,21 @@
 package com.jaerapps;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.jaerapps.guice.BasicModule;
 import com.jaerapps.util.MessageResponder;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,21 +50,40 @@ public class BotRunner extends ListenerAdapter {
     }
 
     @Override
-    public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
+    public void onSlashCommandInteraction(@Nonnull SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
         try {
             MessageResponder responder = messageReceivedHandler.handleMessage(event);
             if (responder != null) {
-                responder.sendResponseMessages();
+                responder.sendResponseMessages(event);
             }
         } catch (Exception e) {
             LOGGER.error("Something awful has happened!  Check the logs!");
-
+            e.printStackTrace();
             event
-                    .getMessage()
-                    .getChannel()
-                    .sendMessageEmbeds(ResponseMessageBuilder.buildErrorResponse("Critical unhandled error: " + e.getMessage()))
+                    .getHook()
+                    .sendMessageEmbeds(
+                            ResponseMessageBuilder.buildErrorResponse("Critical unhandled error: " + e.getMessage()))
                     .queue();
         }
+    }
+
+    @VisibleForTesting
+    protected boolean shouldHandleTopLevelMessage(MessageReceivedEvent event) {
+        Message message = event.getMessage();
+        if (message.getAuthor().isBot()) { // Short-circuit if a human didn't send the message
+            return false;
+        }
+
+        if (!message.isFromGuild()) { // Check if from a server (instead of DM)
+            return false;
+        }
+
+        if (!event.getMessage().getContentRaw().startsWith("!")) {
+            return false;
+        }
+
+        return true;
     }
 
     public static void main(String[] args) throws LoginException {
@@ -69,10 +95,43 @@ public class BotRunner extends ListenerAdapter {
         // args[0] should be the token
         // We only need 2 intents in this bot. We only respond to messages in guilds and private channels.
         // All other events will be disabled.
-        JDABuilder.createLight(args[0], GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
+        JDA discordContext = JDABuilder.createLight(args[0],
+                        GatewayIntent.GUILD_MESSAGES,
+                        GatewayIntent.DIRECT_MESSAGES,
+                        GatewayIntent.MESSAGE_CONTENT)
                 .addEventListeners(new BotRunner(args[1]))
-                .setActivity(Activity.competing("c!help will tell you everything I can do!"))
+                .setActivity(Activity.competing("/help will tell you everything I can do!"))
                 .build();
+
+        if (Boolean.parseBoolean(Configuration.getPropertyOrThrow("slash.commands.update"))) {discordContext
+                    .updateCommands()
+                    .addCommands(
+                            Commands.slash(
+                                    "help",
+                                    "Displays the help message for this bot."),
+                            Commands.slash(
+                                    "shadowball",
+                                    "Starts up a new play that people can respond to."),
+                            Commands.slash(
+                                            "set-season",
+                                            "Sets the season and, optionally, session, for the current game and set of plays")
+                                    .addOption(OptionType.INTEGER, "season", "Season number for this game", true)
+                                    .addOption(OptionType.INTEGER, "session", "Session number for this game", false),
+                            Commands.slash(
+                                    "set-session",
+                                    "Sets the session for the current game.  A game with a valid season must be active!")
+                                    .addOption(OptionType.INTEGER, "session", "Session number for this game", true),
+                            Commands.slash(
+                                    "guess",
+                                    "Guess a number on the current play.")
+                                    .addOption(OptionType.INTEGER, "guess", "What number would you swing?", true),
+                            Commands.slash(
+                                    "resolve",
+                                    "Close the current play with the actual pitch value")
+                                    .addOption(OptionType.INTEGER, "pitch", "Actual pitch number", true)
+                    )
+                    .queue();
+        }
 
         LOGGER.debug("Successfully started bot!");
     }

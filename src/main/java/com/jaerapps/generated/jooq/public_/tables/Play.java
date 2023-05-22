@@ -8,7 +8,7 @@ import com.jaerapps.generated.jooq.public_.Keys;
 import com.jaerapps.generated.jooq.public_.Public;
 import com.jaerapps.generated.jooq.public_.tables.records.PlayRecord;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -62,7 +62,7 @@ public class Play extends TableImpl<PlayRecord> {
     /**
      * The column <code>public.play.creation_date</code>.
      */
-    public final TableField<PlayRecord, LocalDate> CREATION_DATE = createField(DSL.name("creation_date"), SQLDataType.LOCALDATE.nullable(false), this, "");
+    public final TableField<PlayRecord, OffsetDateTime> CREATION_DATE = createField(DSL.name("creation_date"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false), this, "");
 
     /**
      * The column <code>public.play.game_id</code>.
@@ -157,7 +157,7 @@ public class Play extends TableImpl<PlayRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row4<UUID, Integer, LocalDate, UUID> fieldsRow() {
+    public Row4<UUID, Integer, OffsetDateTime, UUID> fieldsRow() {
         return (Row4) super.fieldsRow();
     }
 }

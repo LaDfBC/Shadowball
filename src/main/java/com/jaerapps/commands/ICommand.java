@@ -1,10 +1,8 @@
 package com.jaerapps.commands;
 
-import com.jaerapps.util.MessageContext;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-
-import java.util.List;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 public interface ICommand {
-    public MessageEmbed runCommand(MessageContext context);
+    public MessageEmbed runCommand(SlashCommandInteractionEvent event);
 }

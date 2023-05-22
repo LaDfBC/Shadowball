@@ -1,14 +1,15 @@
 package com.jaerapps.util;
 
 import com.google.common.collect.Lists;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
 import java.util.List;
 
 public class MessageResponder {
-    private final List<Object> queuedMessages;
+    private final List<MessageEmbed> queuedMessages;
     private final MessageChannel channel;
 
     private MessageResponder(MessageChannel channel) {
@@ -16,7 +17,7 @@ public class MessageResponder {
         this.channel = channel;
     }
 
-    public List<Object> getMessages() {
+    public List<MessageEmbed> getMessages() {
         return queuedMessages;
     }
 
@@ -29,35 +30,15 @@ public class MessageResponder {
     }
 
 
-    public MessageResponder addMessage(CharSequence message) {
-        this.queuedMessages.add(message);
-        return this;
-    }
-
     public MessageResponder addMessage(MessageEmbed message) {
         this.queuedMessages.add(message);
         return this;
     }
 
-    public MessageResponder addMessage(Message message) {
-        this.queuedMessages.add(message);
-        return this;
-    }
-
-    public void sendResponseMessages() {
-        for (Object currentMessage : queuedMessages) {
-            if (currentMessage instanceof MessageEmbed) {
-                channel
-                        .sendMessageEmbeds((MessageEmbed) currentMessage)
-                        .queue();
-            } else {
-                channel.sendMessage("The dev messed up and tried to send a message that wasn't embedded properly.  Tell them to fix that.")
-                        .queue();
-            }
-        }
-    }
-
-    public void addAllMessages(List<Object> messageList) {
-        queuedMessages.addAll(messageList);
+    public void sendResponseMessages(SlashCommandInteractionEvent event) {
+        event
+                .getHook()
+                .sendMessageEmbeds(queuedMessages)
+                .queue();
     }
 }

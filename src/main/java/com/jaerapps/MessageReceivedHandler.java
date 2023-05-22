@@ -1,114 +1,74 @@
 package com.jaerapps;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
-import com.jaerapps.errors.DiscordResponseError;
-import com.jaerapps.util.MessageContext;
+import com.jaerapps.commands.*;
+import com.jaerapps.enums.CoreCommand;
 import com.jaerapps.util.MessageResponder;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
 
 public class MessageReceivedHandler {
     private final Logger LOGGER = LoggerFactory.getLogger(MessageReceivedHandler.class);
 
-//    private final ServiceConductor serviceConductor;
-
-
+    private final GhostballCommand ghostballCommand;
+    private final SetSeasonCommand setSeasonCommand;
+    private final SetSessionCommand setSessionCommand;
+    private final GuessCommand guessCommand;
+    private final ResolveCommand resolveCommand;
 
     @Inject
     public MessageReceivedHandler(
-//                                  PreferenceService playerPreferenceService,
-                                  ) {
-//        this.serviceConductor = serviceConductor;
-//        this.playerPreferenceService = playerPreferenceService;
+            @Nonnull final GhostballCommand ghostballCommand,
+            @Nonnull final SetSeasonCommand setSeasonCommand,
+            @Nonnull final SetSessionCommand setSessionCommand,
+            @Nonnull final GuessCommand guessCommand,
+            @Nonnull final ResolveCommand resolveCommand
+    ) {
+        this.ghostballCommand = ghostballCommand;
+        this.setSeasonCommand = setSeasonCommand;
+        this.setSessionCommand = setSessionCommand;
+        this.guessCommand = guessCommand;
+        this.resolveCommand = resolveCommand;
     }
 
-    public MessageResponder handleMessage(MessageReceivedEvent event) {
-        MessageResponder responder = null;
+    public MessageResponder handleMessage(SlashCommandInteractionEvent event) {
+        MessageResponder responder = MessageResponder.create(event.getChannel());
+        CoreCommand incomingCommand = CoreCommand.init(event.getName());
 
-        if (!shouldHandleTopLevelMessage(event)) {
-            return null;
-        }
-
-//        try {
-
-            // Ensures the message we got is parseable and should be something we handle.
-            MessageContext messageContext;
-            try {
-                messageContext = new MessageContext(event);
-            } catch (ArrayIndexOutOfBoundsException aioobe) {
-                LOGGER.trace("This message was not for a bot!");
-                return null;
-            } catch (Exception e) {
-                LOGGER.warn("I caught something weird: ", e);
-                return null;
-            }
-
-            responder = MessageResponder.create(messageContext.getChannel());
-
-//            if (serviceConductor.verifyPrefix(messageContext)) {
-//                if (serviceConductor.isDefaultPrefix(messageContext.getPrefix())) {
-            switch (messageContext.getCommand()) {
-                case HELP:
-
-//                            if (messageContext.getCommandArguments().size() == 0) {
-//                                responder.addMessage(HelpMessages.buildFromRequest(messageContext.getCommandArguments()).build());
-//                            } else if (messageContext.getCommandArguments().size() == 1) {
-//                                try {
-//                                    GameType gameType = GameType.init(messageContext.getCommandArguments().get(0));
-//                                    if (gameType.equals(GameType.DODGEBALL)) {
-//                                        responder.addMessage(ResponseMessageBuilder.buildDodgeballHelpResponse());
-//                                        return responder;
-//                                    }
-//                                } catch (IllegalArgumentException ise) {
-//                                    responder.addMessage(ResponseMessageBuilder.buildErrorResponse(ise.getMessage()));
-//                                    return responder;
-//                                }
-//                            } else {
-//                                responder.addMessage(ResponseMessageBuilder.buildErrorResponse("Need either 0 or 1 argument to help messages!"));
-//                            }
-////                            break;
-//                    }
-//                }
-//            }
-//        } catch (DiscordResponseError dre) {
-//                LOGGER.error("Encountered an error that bubbled all the way up!  Handling it!");
-//                event
-//                        .getChannel()
-//                        .sendMessageEmbeds(ResponseMessageBuilder.buildErrorResponse(dre))
-//                        .queue();
-//            } catch (Exception e) {
-//                LOGGER.error("Unexpected Error! Original message follows - please file a bug report, thanks!", e);
-//                event
-//                        .getChannel()
-//                        .sendMessageEmbeds(ResponseMessageBuilder.buildErrorResponse(new DiscordResponseError("Original Message: ", e)))
-//                        .queue();
-//            }
-//    }
+        switch (incomingCommand) {
+            case HELP:
+                responder.addMessage(new HelpCommand().runCommand(event));
+                break;
+            case GHOSTBALL:
+                responder.addMessage(ghostballCommand.runCommand(event));
+                break;
+            case SET_SEASON:
+                responder.addMessage(setSeasonCommand.runCommand(event));
+                break;
+            case SET_SESSION:
+                responder.addMessage(setSessionCommand.runCommand(event));
+                break;
+            case GUESS:
+                responder.addMessage(guessCommand.runCommand(event));
+                break;
+            case RESOLVE:
+                responder.addMessage(resolveCommand.runCommand(event));
+                break;
+            default:
+                responder.addMessage(ResponseMessageBuilder.buildErrorResponse(
+                        "Unrecognized command: " +
+                        event.getName() +
+                        ". Please use /help to see available commands")
+                );
+                break;
 
             }
-//        }
-        return null;
+        return responder;
     }
 
 
-    @VisibleForTesting
-    protected boolean shouldHandleTopLevelMessage(MessageReceivedEvent event) {
-        Message message = event.getMessage();
-        if (message.getAuthor().isBot()) { // Short-circuit if a human didn't send the message
-            return false;
-        }
 
-        if (!message.isFromGuild()) { // Check if from a server (instead of DM)
-            return false;
-        }
-
-        if (!event.getMessage().getContentRaw().startsWith("!")) {
-            return false;
-        }
-
-        return true;
-    }
 }

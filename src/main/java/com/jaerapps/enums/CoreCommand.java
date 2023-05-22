@@ -3,12 +3,13 @@ package com.jaerapps.enums;
 public enum CoreCommand {
     HELP("help"),
     PREFIX("prefix"),
-    GHOSTBALL("ghostball"),
+    GHOSTBALL("shadowball"),
     GUESS("guess"),
     RESOLVE("resolve"),
     POINTS("points"),
-    SESSION_START("start-session"),
-    SESSION_STOP("stop-session");
+    SET_SEASON("set-season"),
+    GET_GAME_INFO("get-game"),
+    SET_SESSION("start-session");
 
 
     String commandName;
