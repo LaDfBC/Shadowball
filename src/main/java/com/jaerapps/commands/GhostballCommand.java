@@ -40,9 +40,10 @@ public class GhostballCommand implements ICommand {
         }
 
         playService.insert(gameId);
+        event.getChannel().asTextChannel().sendMessage("<@&376584128264536065> pitch is in!  Use /guess to tell me what you think").queue();
         //TODO:
         return ResponseMessageBuilder.buildStandardResponse("New Play",
-                "TODO - USE SERVER PING ID - pitch is in!  Send me your guesses with a !guess command.");
+                "Ping set - ready for guesses");
 
 
 
