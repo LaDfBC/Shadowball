@@ -14,7 +14,7 @@ task fatJar(type: Jar) { dependsOn test
     }
 
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
-//    archiveBaseName = project.name + '-all'
+    archiveName = project.name + '-all-' + version + ".jar"
     from {
         configurations
                 .runtimeClasspath
