@@ -5,17 +5,16 @@ sourceCompatibility = 1.11
 targetCompatibility = 1.11
 
 group = "com.jaerapps"
-version = "0.0.1"
 
 task fatJar(type: Jar) { dependsOn test
     manifest {
         attributes 'Implementation-Title': 'Shadowbot in Java',
-                'Implementation-Version': archiveVersion,
+                'Implementation-Version': version,
                 'Main-Class': 'com.jaerapps.BotRunner'
     }
 
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
-    archiveBaseName = project.name + '-all'
+//    archiveBaseName = project.name + '-all'
     from {
         configurations
                 .runtimeClasspath
