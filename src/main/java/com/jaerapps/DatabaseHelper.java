@@ -19,7 +19,6 @@ public class DatabaseHelper {
         flyway.migrate();
     }
 
-    Here is our lineup for game number 1!
     public static void runJooq() {
         org.jooq.meta.jaxb.Configuration configuration = new org.jooq.meta.jaxb.Configuration()
                 .withJdbc(new Jdbc()
