@@ -18,6 +18,8 @@ public class MessageReceivedHandler {
     private final SetSessionCommand setSessionCommand;
     private final GuessCommand guessCommand;
     private final ResolveCommand resolveCommand;
+    private final PointsCommand pointsCommand;
+    private final ExtractDataCommand extractDataCommand;
 
     @Inject
     public MessageReceivedHandler(
@@ -25,13 +27,17 @@ public class MessageReceivedHandler {
             @Nonnull final SetSeasonCommand setSeasonCommand,
             @Nonnull final SetSessionCommand setSessionCommand,
             @Nonnull final GuessCommand guessCommand,
-            @Nonnull final ResolveCommand resolveCommand
+            @Nonnull final ResolveCommand resolveCommand,
+            @Nonnull final PointsCommand pointsCommand,
+            @Nonnull final ExtractDataCommand extractDataCommand
     ) {
         this.ghostballCommand = ghostballCommand;
         this.setSeasonCommand = setSeasonCommand;
         this.setSessionCommand = setSessionCommand;
         this.guessCommand = guessCommand;
         this.resolveCommand = resolveCommand;
+        this.pointsCommand = pointsCommand;
+        this.extractDataCommand = extractDataCommand;
     }
 
     public MessageResponder handleMessage(SlashCommandInteractionEvent event) {
@@ -56,6 +62,12 @@ public class MessageReceivedHandler {
                 break;
             case RESOLVE:
                 responder.addMessage(resolveCommand.runCommand(event));
+                break;
+            case POINTS:
+                responder.addMessage(pointsCommand.runCommand(event));
+                break;
+            case EXTRACT_DATA:
+                responder.addMessage(extractDataCommand.runCommand(event));
                 break;
             default:
                 responder.addMessage(ResponseMessageBuilder.buildErrorResponse(

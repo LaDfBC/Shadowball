@@ -1,14 +1,18 @@
 package com.jaerapps.service;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.jaerapps.datastore.GuessDAO;
 import com.jaerapps.pojo.GuessPojo;
 import com.jaerapps.pojo.PointsPojo;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 
 import javax.annotation.Nonnull;
-import java.util.List;
-import java.util.UUID;
+import javax.annotation.Nullable;
+import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -59,6 +63,43 @@ public class PointsService {
         }
 
         return 0;
+    }
+
+    public List<PointsPojo> fetchSortedPointsLeaders(@Nullable Integer seasonNumber, @Nullable Integer sessionNumber) {
+        List<GuessPojo> guesses;
+        if (seasonNumber == null && sessionNumber == null) {
+            guesses = guessDAO.fetchAll();
+        } else if (sessionNumber == null) {
+            guesses = guessDAO.fetchForSeason(seasonNumber);
+        } else {
+            guesses = guessDAO.fetchForGame(seasonNumber, sessionNumber);
+        }
+
+        Map<String, Integer> pointsPerMember = Maps.newHashMap();
+
+        guesses.forEach(guessPojo -> {
+            if(pointsPerMember.containsKey(guessPojo.getMemberName())) {
+                pointsPerMember.put(
+                        guessPojo.getMemberName(),
+                        pointsPerMember.get(guessPojo.getMemberName()) + getPointsForGuess(guessPojo.getDifference()));
+            } else {
+                pointsPerMember.put(guessPojo.getMemberName(), getPointsForGuess(guessPojo.getDifference()));
+            }
+        });
+
+
+        return pointsPerMember
+                .entrySet()
+                .stream()
+                .map(
+                        memberNameToPoints -> PointsPojo
+                                .builder()
+                                .withMemberName(memberNameToPoints.getKey())
+                                .withPoints(memberNameToPoints.getValue())
+                                .build()
+                )
+                .sorted((p1, p2) -> p2.getPoints().compareTo(p1.getPoints()))
+                .collect(Collectors.toList());
     }
 
     private static class DifferenceToPointItem {

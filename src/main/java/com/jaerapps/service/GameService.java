@@ -36,4 +36,14 @@ public class GameService {
         gameDAO.setAllGamesInactive();
         gameDAO.setGameActiveById(gameId);
     }
+
+    public UUID fetchOrInsert(GamePojo game) {
+        Optional<GamePojo> fetchedGame = gameDAO.fetchGameBySeasonAndSession(game.getSeasonNumber(), game.getSessionNumber());
+        if (fetchedGame.isEmpty()) {
+            insert(GamePojo.builder().withSessionNumber(game.getSessionNumber()).withSeasonNumber(game.getSeasonNumber()).withGameId(UUID.randomUUID()).build());
+            return fetchGameBySeasonAndSession(game.getSeasonNumber(), game.getSessionNumber()).get().getGameId();
+        } else {
+            return fetchedGame.get().getGameId();
+        }
+    }
 }

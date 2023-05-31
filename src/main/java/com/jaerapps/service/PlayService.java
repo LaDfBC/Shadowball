@@ -41,8 +41,8 @@ public class PlayService {
         return resolvedPlayId;
     }
 
-    public void insert(UUID gameId) {
-        playDAO.insert(PlayPojo
+    public UUID insert(UUID gameId) {
+        return playDAO.insert(PlayPojo
                 .builder()
                 .withGameId(gameId)
                 .withPlayId(UUID.randomUUID())
@@ -50,5 +50,9 @@ public class PlayService {
                 .withPitchValue(null)
                 .build()
         );
+    }
+
+    public UUID insert(PlayPojo fullPlay) {
+        return playDAO.insert(fullPlay);
     }
 }

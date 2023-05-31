@@ -4,18 +4,21 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.jaerapps.generated.jooq.public_.tables.records.GameRecord;
 import com.jaerapps.pojo.DatabaseRowToPojoTranslator;
+import com.jaerapps.pojo.FullGuessContextPojo;
 import com.jaerapps.pojo.GamePojo;
 import org.jooq.CloseableDSLContext;
+import org.jooq.Record;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.jaerapps.generated.jooq.public_.Tables.GAME;
+import static com.jaerapps.generated.jooq.public_.Tables.*;
 import static com.jaerapps.guice.BasicModule.DATABASE_URL;
 
 
@@ -82,6 +85,21 @@ public class GameDAO {
                     .set(GAME.CURRENTLY_ACTIVE, true)
                     .where(GAME.GAME_ID.eq(gameId))
                     .execute();
+        }
+    }
+
+    public List<FullGuessContextPojo> extractAllHistory() {
+        try (CloseableDSLContext ctx = DSL.using(databaseUrl)) {
+            List<Record> allRecords = ctx
+                    .select(GAME.asterisk(), PLAY.asterisk(), GUESS.asterisk())
+                    .from(GAME)
+                    .join(PLAY)
+                    .on(GAME.GAME_ID.eq(PLAY.GAME_ID))
+                    .join(GUESS)
+                    .on(PLAY.PLAY_ID.eq(GUESS.PLAY_ID))
+                    .fetch();
+
+            return DatabaseRowToPojoTranslator.fullContextFromRecords(allRecords);
         }
     }
 }

@@ -6,10 +6,10 @@ import java.util.Date;
 import java.util.UUID;
 
 public class PlayPojo {
-    private UUID playId;
-    private Integer pitchValue;
-    private Date creationDate;
-    private UUID gameId;
+    private final UUID playId;
+    private final Integer pitchValue;
+    private final Date creationDate;
+    private final UUID gameId;
 
     private PlayPojo(UUID playId, Integer pitchValue, Date creationDate, UUID gameId) {
         this.playId = playId;
@@ -22,32 +22,16 @@ public class PlayPojo {
         return playId;
     }
 
-    public void setPlayId(UUID playId) {
-        this.playId = playId;
-    }
-
     public Integer getPitchValue() {
         return pitchValue;
-    }
-
-    public void setPitchValue(Integer pitchValue) {
-        this.pitchValue = pitchValue;
     }
 
     public Date getCreationDate() {
         return creationDate;
     }
 
-    public void setCreationDate(Date creationDate) {
-        this.creationDate = creationDate;
-    }
-
     public UUID getGameId() {
         return gameId;
-    }
-
-    public void setGameId(UUID gameId) {
-        this.gameId = gameId;
     }
 
     public static Builder builder() {

@@ -33,7 +33,7 @@ public class Keys {
 
     public static final UniqueKey<FlywaySchemaHistoryRecord> FLYWAY_SCHEMA_HISTORY_PK = Internal.createUniqueKey(FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY, DSL.name("flyway_schema_history_pk"), new TableField[] { FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY.INSTALLED_RANK }, true);
     public static final UniqueKey<GameRecord> GAME_PKEY = Internal.createUniqueKey(Game.GAME, DSL.name("game_pkey"), new TableField[] { Game.GAME.GAME_ID }, true);
-    public static final UniqueKey<GuessRecord> GUESS_PKEY = Internal.createUniqueKey(Guess.GUESS, DSL.name("guess_pkey"), new TableField[] { Guess.GUESS.MEMBER_ID }, true);
+    public static final UniqueKey<GuessRecord> GUESS_PKEY = Internal.createUniqueKey(Guess.GUESS, DSL.name("guess_pkey"), new TableField[] { Guess.GUESS.MEMBER_ID, Guess.GUESS.PLAY_ID }, true);
     public static final UniqueKey<PlayRecord> PLAY_PKEY = Internal.createUniqueKey(Play.PLAY, DSL.name("play_pkey"), new TableField[] { Play.PLAY.PLAY_ID }, true);
 
     // -------------------------------------------------------------------------

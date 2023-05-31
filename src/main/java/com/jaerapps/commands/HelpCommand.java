@@ -43,6 +43,11 @@ public class HelpCommand implements ICommand {
                             "set-session <REQUIRED: session>",
                             "Sets the session for this game. This is how I figure out how to" +
                                     " award points on a seasonal or game basis."
+                    ),
+                    new ResponseMessageBuilder.MessageEmbedField(
+                            "extract-data <REQUIRED: filename>",
+                            "Fetches all data I've ever created.  Please note that the file will be in CSV format but the filename " +
+                                    "will NOT automatically append the .csv extension to the end."
                     )
                 )
         );

@@ -93,10 +93,11 @@ public class BotRunner extends ListenerAdapter {
         }
 
         // args[0] should be the token
-        // We only need 2 intents in this bot. We only respond to messages in guilds and private channels.
+        // We only need 4 intents for this bot. We only respond to messages in guilds and private channels.
         // All other events will be disabled.
         JDA discordContext = JDABuilder.createLight(args[0],
                         GatewayIntent.GUILD_MESSAGES,
+                        GatewayIntent.GUILD_MEMBERS,
                         GatewayIntent.DIRECT_MESSAGES,
                         GatewayIntent.MESSAGE_CONTENT)
                 .addEventListeners(new BotRunner(args[1]))
@@ -128,7 +129,25 @@ public class BotRunner extends ListenerAdapter {
                             Commands.slash(
                                     "resolve",
                                     "Close the current play with the actual pitch value")
-                                    .addOption(OptionType.INTEGER, "pitch", "Actual pitch number", true)
+                                    .addOption(OptionType.INTEGER, "pitch", "Actual pitch number", true),
+                            Commands.slash(
+                                    "points",
+                                    "Fetches the best users by total points - overall - or by a season - or by a selected game")
+                                    .addOption(OptionType.INTEGER, "season", "Season of the game to show points for", false)
+                                    .addOption(OptionType.INTEGER, "session", "Session of the game to show points for", false),
+//                            Commands.slash(
+//                                    "add-scoring-level",
+//                                    "Adds a new line for maximum guess difference to points scored level")
+//                                    .addOption(OptionType.INTEGER, "difference", "Maximum difference between guess and pitch, inclusive", true)
+//                                    .addOption(OptionType.INTEGER, "points", "Points scored by a player with this difference.", true),
+//                            Commands.slash(
+//                                    "remove-scoring-level",
+//                                    "Deletes a maximum guess difference to points scored level")
+//                                    .addOption(OptionType.INTEGER, "difference", "Maximum difference between guess and pitch.  Must match an existing one!", true),
+                            Commands.slash(
+                                    "extract-data",
+                                    "Extracts all guesses, plays, and games I've ever run on this server")
+                                    .addOption(OptionType.STRING, "filename", "Name of the file you want to be sent back to you.")
                     )
                     .queue();
         }

@@ -9,13 +9,19 @@ public enum CoreCommand {
     POINTS("points"),
     SET_SEASON("set-season"),
     GET_GAME_INFO("get-game"),
-    SET_SESSION("start-session");
+    SET_SESSION("set-session"),
+//    ADD_SCORING_LEVEL("add-scoring-level"),
+//    REMOVE_SCORING_LEVEL("remove-scoring-level"),
+    EXTRACT_DATA("extract-data");
 
-
-    String commandName;
+    private final String commandName;
 
     CoreCommand(String commandName) {
         this.commandName = commandName;
+    }
+
+    public String getCommandName() {
+        return commandName;
     }
 
     /**

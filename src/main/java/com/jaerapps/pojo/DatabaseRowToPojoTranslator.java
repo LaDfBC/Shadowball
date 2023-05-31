@@ -1,19 +1,20 @@
 package com.jaerapps.pojo;
 
-import com.jaerapps.generated.jooq.public_.tables.Play;
 import com.jaerapps.generated.jooq.public_.tables.records.GameRecord;
 import com.jaerapps.generated.jooq.public_.tables.records.GuessRecord;
 import com.jaerapps.generated.jooq.public_.tables.records.PlayRecord;
+import org.jooq.Record;
 import org.jooq.Result;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.swing.text.html.Option;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static com.jaerapps.generated.jooq.public_.Tables.*;
+
 
 public class DatabaseRowToPojoTranslator {
     public static Optional<PlayPojo> playFromRecord(@Nullable PlayRecord playFromDatabase) {
@@ -52,6 +53,39 @@ public class DatabaseRowToPojoTranslator {
                     //noinspection OptionalGetWithoutIsPresent -- We can safely ignore since it's a list of results
                     return guessFromRecord(guessRecord).get();
                 })
+                .collect(Collectors.toList());
+    }
+
+    public static List<FullGuessContextPojo> fullContextFromRecords(List<Record> allRecords) {
+        return allRecords
+                .stream()
+                .map(record -> FullGuessContextPojo
+                        .builder()
+                        .withGame(
+                                GamePojo
+                                        .builder()
+                                        .withGameId(record.get(GAME.GAME_ID))
+                                        .withSeasonNumber(record.get(GAME.SEASON_NUMBER))
+                                        .withSessionNumber(record.get(GAME.SESSION_NUMBER))
+                                        .build())
+                        .withPlay(
+                                PlayPojo
+                                        .builder()
+                                        .withPlayId(record.get(PLAY.PLAY_ID))
+                                        .withCreationDate(Date.from(record.get(PLAY.CREATION_DATE).toInstant()))
+                                        .withPitchValue(record.get(PLAY.PITCH_VALUE))
+                                        .withGameId(record.get(PLAY.GAME_ID))
+                                        .build())
+                        .withGuess(
+                                GuessPojo
+                                        .builder()
+                                        .withPlayId(record.get(GUESS.PLAY_ID))
+                                        .withGuessedNumber(record.get(GUESS.GUESSED_NUMBER))
+                                        .withDifference(record.get(GUESS.DIFFERENCE))
+                                        .withMemberName(record.get(GUESS.MEMBER_NAME))
+                                        .withMemberId(record.get(GUESS.MEMBER_ID))
+                                        .build())
+                        .build())
                 .collect(Collectors.toList());
     }
 }

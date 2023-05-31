@@ -36,6 +36,7 @@ public class ResponseMessageBuilder {
     public static MessageEmbed buildMultiFieldStandardResponse(List<MessageEmbedField> fields) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(Color.GREEN);
+
         for (MessageEmbedField currentField : fields) {
             eb.addField(currentField.getTitle(), currentField.getField(), false);
         }

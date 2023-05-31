@@ -17,9 +17,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.jaerapps.generated.jooq.public_.Tables.GUESS;
+import static com.jaerapps.generated.jooq.public_.Tables.*;
 import static com.jaerapps.guice.BasicModule.DATABASE_URL;
-import static org.jooq.impl.DSL.*;
+import static org.jooq.impl.DSL.if_;
+import static org.jooq.impl.DSL.val;
 
 public class GuessDAO {
     private static final Logger LOGGER = LoggerFactory.getLogger(GuessDAO.class);
@@ -35,12 +36,13 @@ public class GuessDAO {
         try (CloseableDSLContext ctx = DSL.using(databaseUrl)) {
             ctx
                     .insertInto(GUESS)
-                    .columns(GUESS.PLAY_ID, GUESS.MEMBER_ID, GUESS.MEMBER_NAME, GUESS.GUESSED_NUMBER)
+                    .columns(GUESS.PLAY_ID, GUESS.MEMBER_ID, GUESS.MEMBER_NAME, GUESS.GUESSED_NUMBER, GUESS.DIFFERENCE)
                     .values(
                             guessToInsert.getPlayId(),
                             guessToInsert.getMemberId(),
                             guessToInsert.getMemberName(),
-                            guessToInsert.getGuessedNumber()
+                            guessToInsert.getGuessedNumber(),
+                            guessToInsert.getDifference()
                     )
                     .execute();
         }
@@ -105,6 +107,49 @@ public class GuessDAO {
                     .where(GUESS.PLAY_ID.eq(playId))
                     .orderBy(GUESS.DIFFERENCE.asc())
                     .fetch();
+
+            return DatabaseRowToPojoTranslator.guessListFromRecord(guesses);
+        }
+    }
+
+    public List<GuessPojo> fetchAll() {
+        try (CloseableDSLContext ctx = DSL.using(databaseUrl)) {
+            Result<GuessRecord> guesses = ctx
+                    .selectFrom(GUESS)
+                    .fetch();
+
+            return DatabaseRowToPojoTranslator.guessListFromRecord(guesses);
+        }
+    }
+
+    public List<GuessPojo> fetchForSeason(Integer seasonNumber) {
+        try (CloseableDSLContext ctx = DSL.using(databaseUrl)) {
+            Result<GuessRecord> guesses = ctx
+                    .select(GUESS.asterisk())
+                    .from(GUESS)
+                    .join(PLAY)
+                    .on(GUESS.PLAY_ID.eq(PLAY.PLAY_ID))
+                    .join(GAME)
+                    .on(GAME.GAME_ID.eq(PLAY.PLAY_ID))
+                    .where(GAME.SEASON_NUMBER.eq(seasonNumber))
+                    .fetchInto(GUESS);
+
+            return DatabaseRowToPojoTranslator.guessListFromRecord(guesses);
+        }
+    }
+
+    public List<GuessPojo> fetchForGame(Integer seasonNumber, Integer sessionNumber) {
+        try (CloseableDSLContext ctx = DSL.using(databaseUrl)) {
+            Result<GuessRecord> guesses = ctx
+                    .select(GUESS.asterisk())
+                    .from(GUESS)
+                    .join(PLAY)
+                    .on(GUESS.PLAY_ID.eq(PLAY.PLAY_ID))
+                    .join(GAME)
+                    .on(GAME.GAME_ID.eq(PLAY.PLAY_ID))
+                    .where(GAME.SEASON_NUMBER.eq(seasonNumber))
+                    .and(GAME.SESSION_NUMBER.eq(sessionNumber))
+                    .fetchInto(GUESS);
 
             return DatabaseRowToPojoTranslator.guessListFromRecord(guesses);
         }
