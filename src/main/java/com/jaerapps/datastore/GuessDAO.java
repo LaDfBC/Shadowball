@@ -130,7 +130,7 @@ public class GuessDAO {
                     .join(PLAY)
                     .on(GUESS.PLAY_ID.eq(PLAY.PLAY_ID))
                     .join(GAME)
-                    .on(GAME.GAME_ID.eq(PLAY.PLAY_ID))
+                    .on(GAME.GAME_ID.eq(PLAY.GAME_ID))
                     .where(GAME.SEASON_NUMBER.eq(seasonNumber))
                     .fetchInto(GUESS);
 
@@ -146,7 +146,7 @@ public class GuessDAO {
                     .join(PLAY)
                     .on(GUESS.PLAY_ID.eq(PLAY.PLAY_ID))
                     .join(GAME)
-                    .on(GAME.GAME_ID.eq(PLAY.PLAY_ID))
+                    .on(GAME.GAME_ID.eq(PLAY.GAME_ID))
                     .where(GAME.SEASON_NUMBER.eq(seasonNumber))
                     .and(GAME.SESSION_NUMBER.eq(sessionNumber))
                     .fetchInto(GUESS);

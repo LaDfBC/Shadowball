@@ -40,13 +40,50 @@ public class PointsCommand implements ICommand {
 
         List<PointsPojo> sortedMemberPoints = pointsService.fetchSortedPointsLeaders(seasonNumber, sessionNumber);
         StringBuilder pointsOutput = new StringBuilder();
-        for (PointsPojo currentMember : sortedMemberPoints) {
-            pointsOutput.append(currentMember.getMemberName()).append("\t\t | \t\t").append(currentMember.getPoints()).append("\n");
+
+        String header = "NAME";
+        pointsOutput.append(header);
+        int maxNameLength = getPlayerNameWithMostCharacters(header,sortedMemberPoints);
+        int spaceCount = 0;
+        while(header.length() + spaceCount < maxNameLength) {
+            pointsOutput.append(" ");
+            spaceCount++;
         }
 
-        return ResponseMessageBuilder.buildStandardResponse(
-                "Leaderboard:",
-                pointsOutput.toString()
-        );
+        pointsOutput.append("|  POINTS\n\n");
+
+        for (PointsPojo currentMember : sortedMemberPoints) {
+            pointsOutput.append(currentMember.getMemberName());
+
+            spaceCount = 0;
+            while(currentMember.getMemberName().length() + spaceCount < maxNameLength) {
+                pointsOutput.append(" ");
+                spaceCount++;
+            }
+            pointsOutput.append("| ").append(currentMember.getPoints()).append("\n");
+        }
+
+        String title;
+        if (seasonNumber == null && sessionNumber == null) {
+            title = "Here's the overall leaderboard:";
+        } else if (sessionNumber == null) {
+            title = "Here's the leaderboard for season " + seasonNumber + ":";
+        } else {
+            title = "Here's the leaderboard for season " + seasonNumber + " and session " + sessionNumber + ":";
+        }
+
+
+        return ResponseMessageBuilder.buildStandardResponse(title, "```\n\n" + pointsOutput.toString() + "```");
+    }
+
+    private int getPlayerNameWithMostCharacters(String header, List<PointsPojo> pointsPerPlayer) {
+        int max = header.length();
+        for (PointsPojo currentPlayer : pointsPerPlayer) {
+            if (currentPlayer.getMemberName().length() > max) {
+                max = currentPlayer.getMemberName().length();
+            }
+        }
+
+        return max + 1; // We're adding 1 to the end of this so that we know which integer value to match - and all values get at least 1
     }
 }

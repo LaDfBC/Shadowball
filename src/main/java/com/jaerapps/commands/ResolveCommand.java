@@ -55,20 +55,45 @@ public class ResolveCommand implements ICommand {
                         "Not enough people participated to give best and worst awards.  Stop being lazy."
                 );
             } else {
+                String playerHeader = "PLAYER";
+                int maxPlayerWidth = getPlayerNameWithMostCharacters(playerHeader, pointsPerPlayer);
+
                 StringBuilder eventualResponse =
-                        new StringBuilder("Closed this play! Here are the results:\n")
-                                .append("PLAYER\t\t|\t\tDIFFERENCE\t\t|\t\tPOINTS GAINED\n");
+                        new StringBuilder("```Closed this play! Here are the results:\n\n").append(playerHeader);
+
+                int spaceCount = 0;
+                while(playerHeader.length() + spaceCount < maxPlayerWidth) {
+                    eventualResponse.append(" ");
+                    spaceCount++;
+                }
+
+                eventualResponse.append(" |  DIFFERENCE  |  POINTS GAINED\n\n");
 
                 for (PointsPojo currentPlayerPoints : pointsPerPlayer) {
-                    eventualResponse.append(currentPlayerPoints.getMemberName()).append("\t\t|\t\t")
-                            .append(currentPlayerPoints.getDifference()).append("\t\t|\t\t")
-                            .append(currentPlayerPoints.getPoints()).append("\n");
+                    eventualResponse.append(currentPlayerPoints.getMemberName());
+
+                    spaceCount = 0;
+                    while(currentPlayerPoints.getMemberName().length() + spaceCount < maxPlayerWidth) {
+                        eventualResponse.append(" ");
+                        spaceCount++;
+                    }
+
+                    eventualResponse.append(" |");
+                    if(currentPlayerPoints.getDifference() < 10) {
+                        eventualResponse.append("       ").append(currentPlayerPoints.getDifference()).append("      ");
+                    } else if (currentPlayerPoints.getDifference() < 100) {
+                        eventualResponse.append("      ").append(currentPlayerPoints.getDifference()).append("      ");
+                    } else {
+                        eventualResponse.append("     ").append(currentPlayerPoints.getDifference()).append("      ");
+                    }
+
+                    eventualResponse.append("|       ").append(currentPlayerPoints.getPoints()).append("\n");
                 }
 
 
                 return ResponseMessageBuilder.buildMultiFieldStandardResponse(
                         List.of(
-                                new ResponseMessageBuilder.MessageEmbedField("Play Closed, Results:", eventualResponse.toString()),
+                                new ResponseMessageBuilder.MessageEmbedField("Play Closed, Results:", eventualResponse.append("```").toString()),
                                 new ResponseMessageBuilder.MessageEmbedField(
                                         "Best Guess", "Congrats to " + pointsPerPlayer.get(0).getMemberName() + " for being the closest"),
                                 new ResponseMessageBuilder.MessageEmbedField(
@@ -78,6 +103,17 @@ public class ResolveCommand implements ICommand {
                 );
             }
         }
+    }
+
+    private int getPlayerNameWithMostCharacters(String header, List<PointsPojo> pointsPerPlayer) {
+        int max = header.length();
+        for (PointsPojo currentPlayer : pointsPerPlayer) {
+            if (currentPlayer.getMemberName().length() > max) {
+                max = currentPlayer.getMemberName().length();
+            }
+        }
+
+        return max + 1; // We're adding 1 to the end of this so that we know which integer value to match - and all values get at least 1
     }
 
     private String getLoserMessage(String memberName) {
