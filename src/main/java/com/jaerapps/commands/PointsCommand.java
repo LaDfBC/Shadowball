@@ -1,9 +1,7 @@
 package com.jaerapps.commands;
 
 import com.jaerapps.ResponseMessageBuilder;
-import com.jaerapps.enums.CoreCommand;
 import com.jaerapps.pojo.PointsPojo;
-import com.jaerapps.service.PlayService;
 import com.jaerapps.service.PointsService;
 import jakarta.inject.Inject;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -12,8 +10,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 
 import javax.annotation.Nonnull;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
 
 public class PointsCommand implements ICommand {
     private final PointsService pointsService;
@@ -36,6 +32,13 @@ public class PointsCommand implements ICommand {
         OptionMapping sessionOption = event.getOption("session");
         if (sessionOption != null) {
             sessionNumber = sessionOption.getAsInt();
+        }
+
+        if(seasonOption == null && sessionOption != null) {
+            return ResponseMessageBuilder.buildWarningResponse(
+                    "You asked for a specific session number (" + sessionNumber + ") but gave no season number.  " +
+                            "That doesn't make sense to me.  Try again and either include" +
+                            " the season or give no parameters if you wanted the leaderboard across all time.");
         }
 
         List<PointsPojo> sortedMemberPoints = pointsService.fetchSortedPointsLeaders(seasonNumber, sessionNumber);

@@ -9,12 +9,14 @@ public class PointsPojo {
     private final String memberName;
     private final Integer difference;
     private final Integer points;
+    private final Integer bonusPoints;
 
-    private PointsPojo(String memberId, String memberName, Integer difference, Integer points) {
+    private PointsPojo(String memberId, String memberName, Integer difference, Integer points, Integer bonusPoints) {
         this.memberId = memberId;
         this.memberName = memberName;
         this.difference = difference;
         this.points = points;
+        this.bonusPoints = bonusPoints;
     }
 
     public String getMemberId() {
@@ -33,6 +35,10 @@ public class PointsPojo {
         return points;
     }
 
+    public Integer getBonusPoints() {
+        return bonusPoints;
+    }
+
     public static PointsPojo.Builder builder() {
         return new PointsPojo.Builder();
     }
@@ -42,6 +48,7 @@ public class PointsPojo {
         private String memberName;
         private Integer difference;
         private Integer points;
+        private Integer bonusPoints;
 
         public Builder() {
         }
@@ -66,8 +73,13 @@ public class PointsPojo {
             return this;
         }
 
+        public PointsPojo.Builder withBonusPoints(Integer bonusPoints) {
+            this.bonusPoints = bonusPoints;
+            return this;
+        }
+
         public PointsPojo build() {
-            return new PointsPojo(memberId, memberName, difference, points);
+            return new PointsPojo(memberId, memberName, difference, points, bonusPoints);
         }
     }
 
@@ -77,11 +89,12 @@ public class PointsPojo {
         if (o == null || getClass() != o.getClass()) return false;
         PointsPojo that = (PointsPojo) o;
         return Objects.equal(memberId, that.memberId) && Objects.equal(memberName, that.memberName) &&
-                Objects.equal(difference, that.difference) && Objects.equal(points, that.points);
+                Objects.equal(difference, that.difference) && Objects.equal(points, that.points) &&
+                Objects.equal(bonusPoints, that.bonusPoints);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(memberId, memberName, difference, points);
+        return Objects.hashCode(memberId, memberName, difference, points, bonusPoints);
     }
 }

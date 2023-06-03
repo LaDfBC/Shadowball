@@ -90,7 +90,6 @@ public class ResolveCommand implements ICommand {
                     eventualResponse.append("|       ").append(currentPlayerPoints.getPoints()).append("\n");
                 }
 
-
                 return ResponseMessageBuilder.buildMultiFieldStandardResponse(
                         List.of(
                                 new ResponseMessageBuilder.MessageEmbedField("Play Closed, Results:", eventualResponse.append("```").toString()),

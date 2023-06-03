@@ -37,6 +37,7 @@ public class PointsService {
         );
     }
 
+    //TODO: INJECT BONUS POINTS INTO HERE.  NEW DAO METHOD, THEN TACK ON THE BONUS POINTS
     public List<PointsPojo> fetchSortedGuessesByPlay(UUID playId) {
         List<GuessPojo> guesses = guessDAO.getDifferenceSortedGuessesForPlay(playId);
         return guessesToPoints(guesses);
@@ -56,6 +57,10 @@ public class PointsService {
     }
 
     private Integer getPointsForGuess(Integer guess) {
+        if (guess == null) {
+            return 0;
+        }
+
         for (DifferenceToPointItem currentDifferential: differenceToPointList) {
             if (currentDifferential.maximumDifference > guess) {
                 return currentDifferential.pointValue;
