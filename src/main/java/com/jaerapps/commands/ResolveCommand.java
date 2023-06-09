@@ -67,7 +67,7 @@ public class ResolveCommand implements ICommand {
                     spaceCount++;
                 }
 
-                eventualResponse.append(" |  DIFFERENCE  |  POINTS GAINED\n\n");
+                eventualResponse.append("| DIFFERENCE  | BASE POINTS | (BONUS)\n\n");
 
                 for (PointsPojo currentPlayerPoints : pointsPerPlayer) {
                     eventualResponse.append(currentPlayerPoints.getMemberName());
@@ -78,16 +78,16 @@ public class ResolveCommand implements ICommand {
                         spaceCount++;
                     }
 
-                    eventualResponse.append(" |");
+                    eventualResponse.append("|");
                     if(currentPlayerPoints.getDifference() < 10) {
-                        eventualResponse.append("       ").append(currentPlayerPoints.getDifference()).append("      ");
+                        eventualResponse.append("       ").append(currentPlayerPoints.getDifference()).append("     ");
                     } else if (currentPlayerPoints.getDifference() < 100) {
-                        eventualResponse.append("      ").append(currentPlayerPoints.getDifference()).append("      ");
+                        eventualResponse.append("      ").append(currentPlayerPoints.getDifference()).append("     ");
                     } else {
-                        eventualResponse.append("     ").append(currentPlayerPoints.getDifference()).append("      ");
+                        eventualResponse.append("     ").append(currentPlayerPoints.getDifference()).append("     ");
                     }
 
-                    eventualResponse.append("|       ").append(currentPlayerPoints.getPoints()).append("\n");
+                    eventualResponse.append("|      ").append(currentPlayerPoints.getPoints()).append("      |    ").append(currentPlayerPoints.getBonusPoints()).append("\n");
                 }
 
                 return ResponseMessageBuilder.buildMultiFieldStandardResponse(

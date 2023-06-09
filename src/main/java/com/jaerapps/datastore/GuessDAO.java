@@ -5,22 +5,21 @@ import com.google.inject.name.Named;
 import com.jaerapps.generated.jooq.public_.tables.records.GuessRecord;
 import com.jaerapps.pojo.DatabaseRowToPojoTranslator;
 import com.jaerapps.pojo.GuessPojo;
-import org.jooq.CloseableDSLContext;
-import org.jooq.Result;
+import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static com.jaerapps.generated.jooq.public_.Tables.*;
 import static com.jaerapps.guice.BasicModule.DATABASE_URL;
-import static org.jooq.impl.DSL.if_;
-import static org.jooq.impl.DSL.val;
+import static org.jooq.impl.DSL.*;
 
 public class GuessDAO {
     private static final Logger LOGGER = LoggerFactory.getLogger(GuessDAO.class);
@@ -153,5 +152,96 @@ public class GuessDAO {
 
             return DatabaseRowToPojoTranslator.guessListFromRecord(guesses);
         }
+    }
+
+    public int fetchStreak(GuessPojo guess) {
+        try (CloseableDSLContext ctx = DSL.using(databaseUrl)) {
+            CommonTableExpression<Record4<UUID, OffsetDateTime, String, Integer>> previous_guesses =
+                    name("previous_guesses")
+                            .as(
+                                    ctx.select(PLAY.PLAY_ID, PLAY.CREATION_DATE, GUESS.MEMBER_NAME, GUESS.DIFFERENCE)
+                                            .from(GUESS)
+                                            .join(PLAY)
+                                            .on(GUESS.PLAY_ID.eq(PLAY.PLAY_ID))
+                                            .orderBy(GUESS.MEMBER_NAME, PLAY.CREATION_DATE)
+                            );
+
+            CommonTableExpression<Record5<UUID, OffsetDateTime, String, Integer, Integer>> partitioned_guesses =
+                    name("partitioned_guesses").fields("play_id", "creation_date", "member_name", "difference", "row_number")
+                            .as(
+                                    ctx
+                                            .with(previous_guesses)
+                                            .select(
+                                                    previous_guesses.field(PLAY.PLAY_ID),
+                                                    previous_guesses.field(PLAY.CREATION_DATE),
+                                                    previous_guesses.field(GUESS.MEMBER_NAME),
+                                                    previous_guesses.field(GUESS.DIFFERENCE),
+                                                    rowNumber().over(
+                                                            partitionBy(previous_guesses.field(GUESS.MEMBER_NAME))
+                                                                    .orderBy(previous_guesses.field(PLAY.CREATION_DATE)))
+                                            )
+                                            .from(previous_guesses)
+                            );
+
+            Table<Record5<UUID, OffsetDateTime, String, Integer, Integer>> pgs_prev = partitioned_guesses.as("pgs_prev");
+            Table<Record5<UUID, OffsetDateTime, String, Integer, Integer>> pgs = partitioned_guesses.as("pgs");
+
+//            case
+//                    when pgs.difference > 200 THEN 0
+//                WHEN max(pgs_prev.row_number) is null THEN
+//            case when pgs.difference > 200 THEN 0
+//                ELSE pgs.row_number
+//                    END
+//                ELSE (pgs.row_number - max(pgs_prev.row_number))
+//                END
+
+            return ctx
+                    .with(previous_guesses)
+                    .with(partitioned_guesses)
+                    .select(
+                            case_()
+                                    .when(pgs.field("difference", GUESS.DIFFERENCE.getType()).gt(200), 0)
+                                    .when(max(pgs_prev.field("row_number", Integer.class)).isNull(),
+                                            case_()
+                                                    .when(pgs.field("difference", GUESS.DIFFERENCE.getType()).gt(200), 0)
+                                                    .else_(pgs.field("row_number", Integer.class))
+                                    )
+                                    .else_(pgs.field("row_number", Integer.class).sub(max(pgs_prev.field("row_number", Integer.class))))
+                                    .as("streak")
+                    )
+                    .from(pgs)
+                    .leftJoin(pgs_prev)
+                    .on(pgs.field("member_name", GUESS.MEMBER_NAME.getType())
+                            .eq(pgs_prev.field("member_name", GUESS.MEMBER_NAME.getType())))
+                    .and(pgs_prev.field("row_number", Integer.class).lt(pgs.field("row_number", Integer.class)))
+                    .and(pgs_prev.field("difference", GUESS.DIFFERENCE.getType()).gt(200))
+                    .where(pgs.field("member_name", GUESS.MEMBER_NAME.getType()).eq(guess.getMemberName())
+                            .and(pgs.field("play_id", PLAY.PLAY_ID.getType()).eq(guess.getPlayId())))
+                    .groupBy(pgs.field("difference", GUESS.DIFFERENCE.getType()), pgs.field("row_number", Integer.class))
+                    .fetchOne()
+                    .get("streak", Integer.class);
+        } catch (NullPointerException npe) {
+            System.out.println("NPE - What's wrong?");
+            throw npe;
+        }
+
+//        select
+//        case
+//                when pgs.difference > 200 THEN 0
+//        ELSE (pgs.row_number - max(pgs_prev.row_number))
+//        END as streak,
+//                pgs.member_name,
+//                pgs.play_id,
+//                pgs.row_number,
+//                pgs.difference
+//        from partitioned_guesses pgs
+//        join partitioned_guesses pgs_prev
+//        on pgs.member_name = pgs_prev.member_name
+//        and pgs_prev.row_number < pgs.row_number
+//        and pgs_prev.difference > 200
+//        where pgs.member_name = 'xxx' and pgs.play_id = 'yyy'
+//        group by 2, 3, 4, 5
+//        order by pgs.member_name, pgs.row_number;
+//        return 0;
     }
 }

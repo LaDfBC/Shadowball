@@ -21,6 +21,8 @@ public class PointsService {
 
     private static List<DifferenceToPointItem> differenceToPointList; // Inclusive maximum difference to points that guess is worth
 
+    private static final int minimumDiffThatScores = 200;
+
     @Inject
     public PointsService(@Nonnull final GuessDAO guessDAO) {
         this.guessDAO = guessDAO;
@@ -37,7 +39,6 @@ public class PointsService {
         );
     }
 
-    //TODO: INJECT BONUS POINTS INTO HERE.  NEW DAO METHOD, THEN TACK ON THE BONUS POINTS
     public List<PointsPojo> fetchSortedGuessesByPlay(UUID playId) {
         List<GuessPojo> guesses = guessDAO.getDifferenceSortedGuessesForPlay(playId);
         return guessesToPoints(guesses);
@@ -52,6 +53,7 @@ public class PointsService {
                         .withMemberId(guess.getMemberId())
                         .withMemberName(guess.getMemberName())
                         .withPoints(getPointsForGuess(guess.getDifference()))
+                        .withBonusPoints(getBonusPointsForGuess(guess))
                         .build())
                 .collect(Collectors.toList());
     }
@@ -70,6 +72,15 @@ public class PointsService {
         return 0;
     }
 
+    private int getBonusPointsForGuess(@Nonnull GuessPojo guess) {
+        try {
+            return guess.getDifference() <= minimumDiffThatScores ? guessDAO.fetchStreak(guess) - 1 : 0;
+        } catch (NullPointerException npe) {
+            System.out.println("What do?");
+            throw npe;
+        }
+    }
+
     public List<PointsPojo> fetchSortedPointsLeaders(@Nullable Integer seasonNumber, @Nullable Integer sessionNumber) {
         List<GuessPojo> guesses;
         if (seasonNumber == null && sessionNumber == null) {
@@ -83,12 +94,15 @@ public class PointsService {
         Map<String, Integer> pointsPerMember = Maps.newHashMap();
 
         guesses.forEach(guessPojo -> {
-            if(pointsPerMember.containsKey(guessPojo.getMemberName())) {
-                pointsPerMember.put(
-                        guessPojo.getMemberName(),
-                        pointsPerMember.get(guessPojo.getMemberName()) + getPointsForGuess(guessPojo.getDifference()));
-            } else {
-                pointsPerMember.put(guessPojo.getMemberName(), getPointsForGuess(guessPojo.getDifference()));
+            if (guessPojo.getDifference() != null) {
+                int bonus = getBonusPointsForGuess(guessPojo);
+                if (pointsPerMember.containsKey(guessPojo.getMemberName())) {
+                    pointsPerMember.put(
+                            guessPojo.getMemberName(),
+                            pointsPerMember.get(guessPojo.getMemberName()) + getPointsForGuess(guessPojo.getDifference()) + bonus);
+                } else {
+                    pointsPerMember.put(guessPojo.getMemberName(), getPointsForGuess(guessPojo.getDifference()) + bonus);
+                }
             }
         });
 
@@ -97,11 +111,13 @@ public class PointsService {
                 .entrySet()
                 .stream()
                 .map(
-                        memberNameToPoints -> PointsPojo
-                                .builder()
-                                .withMemberName(memberNameToPoints.getKey())
-                                .withPoints(memberNameToPoints.getValue())
-                                .build()
+                        memberNameToPoints -> {
+                            return PointsPojo
+                                    .builder()
+                                    .withMemberName(memberNameToPoints.getKey())
+                                    .withPoints(memberNameToPoints.getValue())
+                                    .build();
+                        }
                 )
                 .sorted((p1, p2) -> p2.getPoints().compareTo(p1.getPoints()))
                 .collect(Collectors.toList());
